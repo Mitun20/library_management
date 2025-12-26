@@ -29,6 +29,19 @@ class LibraryTransaction(Document):
 		if article.status == "Available":
 			frappe.throw("Article is not issued to any member")
 			
+	def validate_maximim_limit(self):
+		max_articles = frappe.db.get_single_value("Library Settings", "max_articles")
+		count = frappe.db.count(
+			"Library Transaction",
+			{
+				"library_member": self.library_member,
+				"type": "Issue",
+				"docstatus": DocStatus.submitted(),
+			},
+		)
+		if count >= max_articles:
+			frappe.throw("Member has reached the maximum limit of issued articles")
+
 	def validate_membership(self):
 		validate_membership = frappe.db.exists(
 			"Library Membership",
